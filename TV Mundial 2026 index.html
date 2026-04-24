@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<!-- saved from url=(0061)file:///C:/Users/progr/Downloads/dashboard_tv_mundial_v2.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV Mundial 2026 — Dashboard</title>
+<script src="./TV Mundial 2026_files/chart.umd.js.descarga"></script>
+<style>
+  :root {
+    --navy:#0D1B2A; --navy2:#1a2744; --navy3:#243352;
+    --fag:#1565C0; --fag-bg:#E3F2FD; --fag-fg:#0C447C;
+    --bgh:#E65100; --bgh-bg:#FFF3E0; --bgh-fg:#7E3100;
+    --new:#2E7D32; --new-bg:#E8F5E9; --new-fg:#1B4D1E;
+    --tcl:#6A1B9A; --tcl-bg:#F3E5F5; --tcl-fg:#4A0072;
+    --green:#2E7D32; --green-bg:#E8F5E9;
+    --amber:#E65100; --amber-bg:#FFF3E0;
+    --red:#B71C1C; --red-bg:#FFEBEE;
+    --border:#E0E6F0; --text:#1a2033; --muted:#6B7A99;
+    --surface:#F7F9FC; --white:#FFFFFF; --radius:10px;
+    --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--surface);color:var(--text);min-height:100vh}
+
+  .header{background:var(--navy);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  .header-left{display:flex;align-items:center;gap:12px}
+  .logo{width:32px;height:32px;background:var(--fag);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+  .header-title{font-size:14px;font-weight:600;color:#fff}
+  .header-meta{font-size:10px;color:#8899BB;margin-top:2px}
+  .header-right{display:flex;align-items:center;gap:8px}
+  #api-input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:6px 11px;border-radius:7px;font-size:12px;width:260px}
+  #api-input::placeholder{color:#5A6A88}
+  #btn-refresh{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+  #btn-refresh:hover{background:rgba(255,255,255,.18)}
+  #btn-refresh.loading{opacity:.6;pointer-events:none}
+  #btn-refresh.loading svg{animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tango-badge{background:rgba(46,125,50,.25);border:1px solid rgba(46,125,50,.4);color:#81C784;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600}
+
+  /* TABS NAV */
+  .nav-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0}
+  .nav-tab{padding:12px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+  .nav-tab.active{color:var(--navy);border-bottom-color:var(--fag);font-weight:600}
+  .nav-tab:hover:not(.active){color:var(--text)}
+
+  .main{padding:22px 28px;max-width:1400px;margin:0 auto}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+
+  /* KPIs */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+  .kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .kpi.blue::before{background:var(--fag)} .kpi.amber::before{background:var(--bgh)}
+  .kpi.red::before{background:var(--red)} .kpi.green::before{background:var(--green)}
+  .kpi.teal::before{background:#00796B}
+  .kpi-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+  .kpi-value{font-size:26px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px}
+  .kpi-sub{font-size:11px;color:var(--muted)}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+  .badge-green{background:var(--green-bg);color:var(--green)}
+  .badge-amber{background:var(--amber-bg);color:var(--amber)}
+  .badge-red{background:var(--red-bg);color:var(--red)}
+
+  /* CHARTS */
+  .charts-row{display:grid;grid-template-columns:1fr 1fr 300px;gap:14px;margin-bottom:20px}
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+  .card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+
+  /* TABLES */
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .prov-tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tab-btn{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:var(--white);cursor:pointer;transition:all .15s;color:var(--muted)}
+  .tab-btn.active-ALL{background:var(--navy);border-color:var(--navy);color:#fff}
+  .tab-btn.active-FAG{background:var(--fag-bg);border-color:var(--fag);color:var(--fag)}
+  .tab-btn.active-BGH{background:var(--bgh-bg);border-color:var(--bgh);color:var(--bgh)}
+  .tab-btn.active-NEW{background:var(--new-bg);border-color:var(--new);color:var(--new)}
+  .tab-btn.active-TCL{background:var(--tcl-bg);border-color:var(--tcl);color:var(--tcl)}
+
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead th{background:var(--navy);color:#8899BB;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;white-space:nowrap}
+  thead th:first-child{text-align:left;border-radius:8px 0 0 0}
+  thead th:last-child{border-radius:0 8px 0 0}
+  tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+  tbody tr:hover{background:var(--surface)}
+  tbody tr:last-child{border-bottom:none}
+  td{padding:8px 10px;color:var(--text);text-align:center;vertical-align:middle}
+  td:first-child{text-align:left}
+
+  .prov-pill{font-weight:700;font-size:10px;padding:3px 8px;border-radius:4px;white-space:nowrap;color:#fff}
+  .bar-wrap{display:flex;align-items:center;gap:6px}
+  .bar-bg{flex:1;height:5px;background:#E8EDF5;border-radius:3px;overflow:hidden;min-width:40px}
+  .bar-fill{height:100%;border-radius:3px}
+  .bar-pct{font-size:11px;font-weight:700;min-width:28px;text-align:right}
+  .estado{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.3px}
+  .muted-val{color:#BDC8DC}
+
+  /* PRECIOS */
+  .price-tag{font-size:11px;font-weight:600;color:var(--text)}
+  .price-cost{font-size:10px;color:var(--muted)}
+  .ventas-spark{display:flex;align-items:center;gap:6px}
+  .v-bar{height:20px;background:var(--fag-bg);border-radius:3px;min-width:3px;display:flex;align-items:flex-end}
+  .v-bar-fill{background:var(--fag);border-radius:3px;width:100%}
+
+  /* DIAS STOCK */
+  .dias-ok{color:var(--green);font-weight:700}
+  .dias-warn{color:var(--amber);font-weight:700}
+  .dias-crit{color:var(--red);font-weight:700}
+
+  /* LOADING */
+  #loading{position:fixed;inset:0;background:rgba(13,27,42,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:13px;gap:12px;z-index:999;backdrop-filter:blur(2px)}
+  #loading.hidden{display:none}
+  .spinner{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  #error-msg{background:#FFEBEE;border:1px solid #FFCDD2;color:#B71C1C;padding:10px 18px;border-radius:8px;font-size:12px;margin:12px 0;display:none}
+
+  .footer{text-align:center;padding:18px;font-size:10px;color:var(--muted);border-top:1px solid var(--border);margin-top:8px}
+
+  @media(max-width:960px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .charts-row{grid-template-columns:1fr}
+    .main{padding:14px}
+    #api-input{width:160px}
+  }
+</style>
+</head>
+<body>
+
+<div id="loading" class="hidden"><div class="spinner"></div><span>Cargando datos…</span></div>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">TV</div>
+    <div>
+      <div class="header-title">TV Mundial 2026 — Dashboard</div>
+      <div class="header-meta" id="last-update">Actualizado: 24/4/2026, 06:42:01</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="tango-badge" id="tango-badge" style="display: inline;">Tango: 24/4/2026</span>
+    <input id="api-input" type="text" placeholder="URL de Apps Script…">
+    <button id="btn-refresh" onclick="loadData()" class="">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>
+      Actualizar
+    </button>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <div class="nav-tab active" onclick="switchTab(&#39;recepciones&#39;,this)">Recepciones</div>
+  <div class="nav-tab" onclick="switchTab(&#39;ventas&#39;,this)">Ventas</div>
+  <div class="nav-tab" onclick="switchTab(&#39;precios&#39;,this)">Precios</div>
+</nav>
+
+<main class="main">
+  <div id="error-msg" style="display: none;">Error al conectar: Acceso denegado: DriveApp.</div>
+
+  <!-- ══ TAB: RECEPCIONES ══ -->
+  <div id="tab-recepciones" class="tab-content active">
+    <div class="kpi-grid">
+      <div class="kpi blue"><div class="kpi-label">Total pedido</div><div class="kpi-value" id="kpi-pedido">5.188</div><div class="kpi-sub">unidades comprometidas</div></div>
+      <div class="kpi amber"><div class="kpi-label">Total recibido</div><div class="kpi-value" id="kpi-recibido">3.271</div><div class="kpi-sub" id="kpi-rec-sub"><span class="badge badge-amber">63%</span> del total</div></div>
+      <div class="kpi red"><div class="kpi-label">Pendiente</div><div class="kpi-value" id="kpi-pendiente">1.917</div><div class="kpi-sub" id="kpi-pend-sub"><span class="badge badge-red">37% sin recibir</span></div></div>
+      <div class="kpi green"><div class="kpi-label">Mejor proveedor</div><div class="kpi-value" id="kpi-mejor" style="font-size:17px">FAG SISTEM</div><div class="kpi-sub" id="kpi-mejor-sub"><span class="badge badge-green">93% cumplimiento</span></div></div>
+    </div>
+    <div class="charts-row">
+      <div class="card"><div class="card-title">Cumplimiento por proveedor</div><div style="position:relative;height:190px"><canvas id="c-cumpl" role="img" aria-label="Cumplimiento por proveedor" style="box-sizing: border-box; display: block; height: 190px; width: 470px;" width="588" height="237"></canvas></div></div>
+      <div class="card"><div class="card-title">Recepciones por mes</div><div style="position:relative;height:190px"><canvas id="c-meses" role="img" aria-label="Recepciones por mes" style="box-sizing: border-box; display: block; height: 190px; width: 470px;" width="588" height="237"></canvas></div></div>
+      <div class="card"><div class="card-title">Mix tecnología</div><div style="position:relative;height:140px"><canvas id="c-tipo" role="img" aria-label="Mix tecnología" style="box-sizing: border-box; display: block; height: 140px; width: 262px;" width="328" height="175"></canvas></div><div id="tipo-leg" style="margin-top:10px;font-size:11px;display:flex;flex-wrap:wrap;gap:8px"><span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#378ADD"></span><span style="color:#6B7A99">LED 83%</span></span><span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#EF9F27"></span><span style="color:#6B7A99">QLED 17%</span></span></div></div>
+    </div>
+    <div class="section-header"><div class="section-title">Detalle recepciones</div><div class="prov-tabs"><button class="tab-btn active-ALL" onclick="filterTabla(&#39;ALL&#39;,this,&#39;rec&#39;)">Todos</button><button class="tab-btn" onclick="filterTabla(&#39;FAG&#39;,this,&#39;rec&#39;)">FAG SISTEM</button><button class="tab-btn" onclick="filterTabla(&#39;BGH&#39;,this,&#39;rec&#39;)">BGH</button><button class="tab-btn" onclick="filterTabla(&#39;NEW&#39;,this,&#39;rec&#39;)">NEW SAN</button><button class="tab-btn" onclick="filterTabla(&#39;TCL&#39;,this,&#39;rec&#39;)">TCL</button></div></div>
+    <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table><thead><tr><th>Proveedor</th><th>Descripción</th><th>Tipo</th><th>"</th><th>Pedido</th><th>Recibido</th><th>Pendiente</th><th style="min-width:120px">% Cumpl.</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Estado</th></tr></thead><tbody id="tbody-rec"><tr>
+        <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 32" HD ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+        <td style="font-weight:700;color:#0C447C">32"</td>
+        <td>600</td><td style="font-weight:600">600</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="muted-val">—</td><td class="">400</td><td class="">200</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 40" FULL HD ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+        <td style="font-weight:700;color:#0C447C">40"</td>
+        <td>421</td><td style="font-weight:600">390</td>
+        <td style="color:#B71C1C">31</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:93%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">93%</span></div></td>
+        <td class="muted-val">—</td><td class="">290</td><td class="">100</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 43" FULL HD ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+        <td style="font-weight:700;color:#0C447C">43"</td>
+        <td>310</td><td style="font-weight:600">290</td>
+        <td style="color:#B71C1C">20</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:94%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">94%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="">290</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 50" 4K ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+        <td style="font-weight:700;color:#0C447C">50"</td>
+        <td>100</td><td style="font-weight:600">50</td>
+        <td style="color:#B71C1C">50</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:50%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">50%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="">50</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 65" QLED 4K ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+        <td style="font-weight:700;color:#0C447C">65"</td>
+        <td>50</td><td style="font-weight:600">50</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="muted-val">—</td><td class="">30</td><td class="">20</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 75" QLED 4K ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+        <td style="font-weight:700;color:#0C447C">75"</td>
+        <td>15</td><td style="font-weight:600">15</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="">15</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TV KANJI 100" QLED 4K GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+        <td style="font-weight:700;color:#0C447C">100"</td>
+        <td>4</td><td style="font-weight:600">0</td>
+        <td style="color:#B71C1C">4</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:#B71C1C"></div></div><span class="bar-pct" style="color:#B71C1C">0%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span></td></tr><tr>
+        <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+        <td style="text-align:left;font-size:11px">BGH 32" ANDROID TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+        <td style="font-weight:700;color:#7E3100">32"</td>
+        <td>200</td><td style="font-weight:600">200</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="muted-val">—</td><td class="">100</td><td class="">100</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">BGH 43" ANDROID TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+        <td style="font-weight:700;color:#7E3100">43"</td>
+        <td>150</td><td style="font-weight:600">90</td>
+        <td style="color:#B71C1C">60</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:60%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">60%</span></div></td>
+        <td class="muted-val">—</td><td class="">60</td><td class="">30</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">BGH 50" GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+        <td style="font-weight:700;color:#7E3100">50"</td>
+        <td>400</td><td style="font-weight:600">243</td>
+        <td style="color:#B71C1C">157</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:61%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">61%</span></div></td>
+        <td class="muted-val">—</td><td class="">230</td><td class="">13</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">BGH 50" QLED GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">QLED</span></td>
+        <td style="font-weight:700;color:#7E3100">50"</td>
+        <td>13</td><td style="font-weight:600">13</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="muted-val">—</td><td class="">13</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">BGH 60" GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+        <td style="font-weight:700;color:#7E3100">60"</td>
+        <td>50</td><td style="font-weight:600">50</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="muted-val">—</td><td class="">45</td><td class="">5</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 32" ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">32"</td>
+        <td>600</td><td style="font-weight:600">487</td>
+        <td style="color:#B71C1C">113</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:81%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">81%</span></div></td>
+        <td class="">150</td><td class="">225</td><td class="">112</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 43" ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">43"</td>
+        <td>550</td><td style="font-weight:600">0</td>
+        <td style="color:#B71C1C">550</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:#B71C1C"></div></div><span class="bar-pct" style="color:#B71C1C">0%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 50" ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">50"</td>
+        <td>150</td><td style="font-weight:600">0</td>
+        <td style="color:#B71C1C">150</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:#B71C1C"></div></div><span class="bar-pct" style="color:#B71C1C">0%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 55" QLED ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">QLED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">55"</td>
+        <td>150</td><td style="font-weight:600">122</td>
+        <td style="color:#B71C1C">28</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:81%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">81%</span></div></td>
+        <td class="">38</td><td class="">56</td><td class="">28</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 58" ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">58"</td>
+        <td>350</td><td style="font-weight:600">0</td>
+        <td style="color:#B71C1C">350</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:#B71C1C"></div></div><span class="bar-pct" style="color:#B71C1C">0%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 65" ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">65"</td>
+        <td>100</td><td style="font-weight:600">44</td>
+        <td style="color:#B71C1C">56</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:44%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">44%</span></div></td>
+        <td class="">25</td><td class="">6</td><td class="">13</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 70" QLED ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">QLED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">70"</td>
+        <td>60</td><td style="font-weight:600">0</td>
+        <td style="color:#B71C1C">60</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:0%;background:#B71C1C"></div></div><span class="bar-pct" style="color:#B71C1C">0%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">NOBLEX 75" ANDROID</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+        <td style="font-weight:700;color:#1B4D1E">75"</td>
+        <td>40</td><td style="font-weight:600">20</td>
+        <td style="color:#B71C1C">20</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:50%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">50%</span></div></td>
+        <td class="muted-val">—</td><td class="muted-val">—</td><td class="">20</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+        <td style="text-align:left;font-size:11px">TCL QLED 32" FHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+        <td style="font-weight:700;color:#4A0072">32"</td>
+        <td>200</td><td style="font-weight:600">150</td>
+        <td style="color:#B71C1C">50</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:75%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">75%</span></div></td>
+        <td class="">60</td><td class="muted-val">—</td><td class="">90</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TCL QLED 43" FHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+        <td style="font-weight:700;color:#4A0072">43"</td>
+        <td>220</td><td style="font-weight:600">220</td>
+        <td style="color:#B71C1C">0</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#2E7D32"></div></div><span class="bar-pct" style="color:#2E7D32">100%</span></div></td>
+        <td class="">120</td><td class="muted-val">—</td><td class="">100</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TCL LED 55" 4K UHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">LED</span></td>
+        <td style="font-weight:700;color:#4A0072">55"</td>
+        <td>260</td><td style="font-weight:600">140</td>
+        <td style="color:#B71C1C">120</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:54%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">54%</span></div></td>
+        <td class="">60</td><td class="">80</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TCL QLED 55" UHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+        <td style="font-weight:700;color:#4A0072">55"</td>
+        <td>100</td><td style="font-weight:600">60</td>
+        <td style="color:#B71C1C">40</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:60%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">60%</span></div></td>
+        <td class="">30</td><td class="">30</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TCL QLED 65" UHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+        <td style="font-weight:700;color:#4A0072">65"</td>
+        <td>50</td><td style="font-weight:600">25</td>
+        <td style="color:#B71C1C">25</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:50%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">50%</span></div></td>
+        <td class="">10</td><td class="">15</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TCL QLED 75" UHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+        <td style="font-weight:700;color:#4A0072">75"</td>
+        <td>30</td><td style="font-weight:600">5</td>
+        <td style="color:#B71C1C">25</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:17%;background:#B71C1C"></div></div><span class="bar-pct" style="color:#B71C1C">17%</span></div></td>
+        <td class="">5</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span></td></tr><tr>
+        <td></td>
+        <td style="text-align:left;font-size:11px">TCL QLED 85" UHD GOOGLE TV</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+        <td style="font-weight:700;color:#4A0072">85"</td>
+        <td>15</td><td style="font-weight:600">7</td>
+        <td style="color:#B71C1C">8</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:47%;background:#E65100"></div></div><span class="bar-pct" style="color:#E65100">47%</span></div></td>
+        <td class="">2</td><td class="">5</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+        <td><span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span></td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- ══ TAB: VENTAS ══ -->
+  <div id="tab-ventas" class="tab-content">
+    <div class="kpi-grid">
+      <div class="kpi blue"><div class="kpi-label">Ventas últimos 30 días</div><div class="kpi-value" id="kpi-v30">717</div><div class="kpi-sub">unidades vendidas</div></div>
+      <div class="kpi amber"><div class="kpi-label">Ventas últimos 3 meses</div><div class="kpi-value" id="kpi-v3m">1.222</div><div class="kpi-sub">acumulado</div></div>
+      <div class="kpi green"><div class="kpi-label">Artículo más vendido (30d)</div><div class="kpi-value" id="kpi-top30" style="font-size:13px;line-height:1.3">NOBLEX 32" ANDROID</div><div class="kpi-sub" id="kpi-top30-sub"><span class="badge badge-green">145 u.</span></div></div>
+      <div class="kpi teal"><div class="kpi-label">Artículo más vendido (3M)</div><div class="kpi-value" id="kpi-top3m" style="font-size:13px;line-height:1.3">NOBLEX 32" ANDROID</div><div class="kpi-sub" id="kpi-top3m-sub"><span class="badge badge-amber">230 u.</span></div></div>
+    </div>
+    <div class="charts-row" style="grid-template-columns:1fr 1fr">
+      <div class="card"><div class="card-title">Ventas 30d por proveedor</div><div style="position:relative;height:200px"><canvas id="c-v30prov" role="img" aria-label="Ventas 30 días por proveedor" style="box-sizing: border-box; display: block; height: 200px; width: 627px;" width="784" height="250"></canvas></div></div>
+      <div class="card"><div class="card-title">Ventas 3 meses por proveedor</div><div style="position:relative;height:200px"><canvas id="c-v3mprov" role="img" aria-label="Ventas 3 meses por proveedor" style="box-sizing: border-box; display: block; height: 200px; width: 627px;" width="784" height="250"></canvas></div></div>
+    </div>
+    <div class="section-header"><div class="section-title">Ranking de ventas por artículo</div><div class="prov-tabs"><button class="tab-btn active-ALL" onclick="filterTabla(&#39;ALL&#39;,this,&#39;ven&#39;)">Todos</button><button class="tab-btn" onclick="filterTabla(&#39;FAG&#39;,this,&#39;ven&#39;)">FAG SISTEM</button><button class="tab-btn" onclick="filterTabla(&#39;BGH&#39;,this,&#39;ven&#39;)">BGH</button><button class="tab-btn" onclick="filterTabla(&#39;NEW&#39;,this,&#39;ven&#39;)">NEW SAN</button><button class="tab-btn" onclick="filterTabla(&#39;TCL&#39;,this,&#39;ven&#39;)">TCL</button></div></div>
+    <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table><thead><tr><th>Proveedor</th><th>Artículo</th><th>Tipo</th><th>"</th><th>Stock actual</th><th>Ventas 30d</th><th>Ventas 3M</th><th>Ventas año</th><th>Días stock</th></tr></thead><tbody id="tbody-ven"><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 32" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">32"</td>
+      <td style="font-weight:600">248</td>
+      <td style="font-weight:700;color:#1565C0">145</td>
+      <td style="color:#333">230</td>
+      <td style="color:var(--muted)">789</td>
+      <td><span class="dias-ok">51d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 43" FHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">43"</td>
+      <td style="font-weight:600">92</td>
+      <td style="font-weight:700;color:#1565C0">117</td>
+      <td style="color:#333">135</td>
+      <td style="color:var(--muted)">168</td>
+      <td><span class="dias-warn">24d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 43" ANDROID TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">43"</td>
+      <td style="font-weight:600">38</td>
+      <td style="font-weight:700;color:#1565C0">67</td>
+      <td style="color:#333">147</td>
+      <td style="color:var(--muted)">481</td>
+      <td><span class="dias-warn">17d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 50" GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">50"</td>
+      <td style="font-weight:600">169</td>
+      <td style="font-weight:700;color:#1565C0">65</td>
+      <td style="color:#333">105</td>
+      <td style="color:var(--muted)">105</td>
+      <td><span class="dias-ok">78d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 40" FULL HD ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">40"</td>
+      <td style="font-weight:600">214</td>
+      <td style="font-weight:700;color:#1565C0">54</td>
+      <td style="color:#333">65</td>
+      <td style="color:var(--muted)">65</td>
+      <td><span class="dias-ok">119d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 32" HD ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">32"</td>
+      <td style="font-weight:600">223</td>
+      <td style="font-weight:700;color:#1565C0">45</td>
+      <td style="color:#333">70</td>
+      <td style="color:var(--muted)">75</td>
+      <td><span class="dias-ok">149d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 32" FHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">32"</td>
+      <td style="font-weight:600">170</td>
+      <td style="font-weight:700;color:#1565C0">41</td>
+      <td style="color:#333">53</td>
+      <td style="color:var(--muted)">67</td>
+      <td><span class="dias-ok">124d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 55" QLED ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">QLED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">55"</td>
+      <td style="font-weight:600">81</td>
+      <td style="font-weight:700;color:#1565C0">39</td>
+      <td style="color:#333">43</td>
+      <td style="color:var(--muted)">43</td>
+      <td><span class="dias-ok">62d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL LED 55" 4K UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">LED</span></td>
+      <td style="font-weight:700;color:#4A0072">55"</td>
+      <td style="font-weight:600">219</td>
+      <td style="font-weight:700;color:#1565C0">31</td>
+      <td style="color:#333">35</td>
+      <td style="color:var(--muted)">35</td>
+      <td><span class="dias-ok">212d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 60" GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">60"</td>
+      <td style="font-weight:600">27</td>
+      <td style="font-weight:700;color:#1565C0">28</td>
+      <td style="color:#333">47</td>
+      <td style="color:var(--muted)">47</td>
+      <td><span class="dias-warn">29d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 65" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">65"</td>
+      <td style="font-weight:600">23</td>
+      <td style="font-weight:700;color:#1565C0">16</td>
+      <td style="color:#333">25</td>
+      <td style="color:var(--muted)">70</td>
+      <td><span class="dias-ok">43d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 65" QLED 4K ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+      <td style="font-weight:700;color:#0C447C">65"</td>
+      <td style="font-weight:600">34</td>
+      <td style="font-weight:700;color:#1565C0">11</td>
+      <td style="color:#333">15</td>
+      <td style="color:var(--muted)">15</td>
+      <td><span class="dias-ok">93d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 50" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">50"</td>
+      <td style="font-weight:600">13</td>
+      <td style="font-weight:700;color:#1565C0">11</td>
+      <td style="color:#333">62</td>
+      <td style="color:var(--muted)">84</td>
+      <td><span class="dias-ok">35d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 43" FULL HD ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">43"</td>
+      <td style="font-weight:600">194</td>
+      <td style="font-weight:700;color:#1565C0">10</td>
+      <td style="color:#333">10</td>
+      <td style="color:var(--muted)">10</td>
+      <td><span class="dias-ok">582d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 75" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">75"</td>
+      <td style="font-weight:600">21</td>
+      <td style="font-weight:700;color:#1565C0">8</td>
+      <td style="color:#333">8</td>
+      <td style="color:var(--muted)">8</td>
+      <td><span class="dias-ok">79d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 55" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">55"</td>
+      <td style="font-weight:600">109</td>
+      <td style="font-weight:700;color:#1565C0">6</td>
+      <td style="color:#333">14</td>
+      <td style="color:var(--muted)">48</td>
+      <td><span class="dias-ok">545d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 75" QLED 4K ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+      <td style="font-weight:700;color:#0C447C">75"</td>
+      <td style="font-weight:600">9</td>
+      <td style="font-weight:700;color:#1565C0">5</td>
+      <td style="color:#333">5</td>
+      <td style="color:var(--muted)">5</td>
+      <td><span class="dias-ok">54d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 43" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">43"</td>
+      <td style="font-weight:600">7</td>
+      <td style="font-weight:700;color:#1565C0">5</td>
+      <td style="color:#333">83</td>
+      <td style="color:var(--muted)">445</td>
+      <td><span class="dias-ok">42d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 58" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">58"</td>
+      <td style="font-weight:600">4</td>
+      <td style="font-weight:700;color:#1565C0">5</td>
+      <td style="color:#333">52</td>
+      <td style="color:var(--muted)">296</td>
+      <td><span class="dias-warn">24d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 85" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">85"</td>
+      <td style="font-weight:600">9</td>
+      <td style="font-weight:700;color:#1565C0">3</td>
+      <td style="color:#333">7</td>
+      <td style="color:var(--muted)">12</td>
+      <td><span class="dias-ok">90d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 65" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">65"</td>
+      <td style="font-weight:600">1</td>
+      <td style="font-weight:700;color:#1565C0">2</td>
+      <td style="color:#333">6</td>
+      <td style="color:var(--muted)">36</td>
+      <td><span class="dias-warn">15d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 32" ANDROID TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">32"</td>
+      <td style="font-weight:600">3</td>
+      <td style="font-weight:700;color:#1565C0">1</td>
+      <td style="color:#333">2</td>
+      <td style="color:var(--muted)">49</td>
+      <td><span class="dias-ok">90d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 50" QLED GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">QLED</span></td>
+      <td style="font-weight:700;color:#7E3100">50"</td>
+      <td style="font-weight:600">12</td>
+      <td style="font-weight:700;color:#1565C0">1</td>
+      <td style="color:#333">1</td>
+      <td style="color:var(--muted)">1</td>
+      <td><span class="dias-ok">360d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 75" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">75"</td>
+      <td style="font-weight:600">17</td>
+      <td style="font-weight:700;color:#1565C0">1</td>
+      <td style="color:#333">2</td>
+      <td style="color:var(--muted)">49</td>
+      <td><span class="dias-ok">510d</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 50" 4K ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">50"</td>
+      <td style="font-weight:600">0</td>
+      <td style="font-weight:700;color:#BDC8DC">—</td>
+      <td style="color:#BDC8DC">—</td>
+      <td style="color:var(--muted)">—</td>
+      <td><span class="muted-val">—</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 100" QLED 4K GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+      <td style="font-weight:700;color:#0C447C">100"</td>
+      <td style="font-weight:600">0</td>
+      <td style="font-weight:700;color:#BDC8DC">—</td>
+      <td style="color:#BDC8DC">—</td>
+      <td style="color:var(--muted)">—</td>
+      <td><span class="muted-val">—</span></td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 70" QLED ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">QLED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">70"</td>
+      <td style="font-weight:600">0</td>
+      <td style="font-weight:700;color:#BDC8DC">—</td>
+      <td style="color:#BDC8DC">—</td>
+      <td style="color:var(--muted)">—</td>
+      <td><span class="muted-val">—</span></td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- ══ TAB: PRECIOS ══ -->
+  <div id="tab-precios" class="tab-content">
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="kpi blue"><div class="kpi-label">Fuente</div><div class="kpi-value" style="font-size:16px">Tango ERP</div><div class="kpi-sub" id="kpi-tango-fecha">Archivo: Reporte_Ranking_2026-04-24.csv</div></div>
+      <div class="kpi green"><div class="kpi-label">Artículos con precio</div><div class="kpi-value" id="kpi-con-precio">26</div><div class="kpi-sub">de los TVs de la programada</div></div>
+      <div class="kpi amber"><div class="kpi-label">Listas disponibles</div><div class="kpi-value">10</div><div class="kpi-sub">L1-L7 · L20 · L21</div></div>
+    </div>
+
+    <div class="section-header" style="margin-bottom:8px">
+      <div class="section-title">Precios por lista</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:11px;color:var(--muted)">Mostrar lista:</span>
+        <select id="lista-select" onchange="renderPrecios()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--white)">
+          <option value="L1">L1 (Contado)</option>
+          <option value="L2">L2</option>
+          <option value="L3">L3</option>
+          <option value="L4">L4</option>
+          <option value="L5">L5</option>
+          <option value="L6">L6</option>
+          <option value="L7">L7</option>
+          <option value="L20">L20</option>
+          <option value="L21">L21</option>
+        </select>
+        <div class="prov-tabs"><button class="tab-btn active-ALL" onclick="filterTabla(&#39;ALL&#39;,this,&#39;prec&#39;)">Todos</button><button class="tab-btn" onclick="filterTabla(&#39;FAG&#39;,this,&#39;prec&#39;)">FAG</button><button class="tab-btn" onclick="filterTabla(&#39;BGH&#39;,this,&#39;prec&#39;)">BGH</button><button class="tab-btn" onclick="filterTabla(&#39;NEW&#39;,this,&#39;prec&#39;)">NEW SAN</button><button class="tab-btn" onclick="filterTabla(&#39;TCL&#39;,this,&#39;prec&#39;)">TCL</button></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table><thead><tr><th>Proveedor</th><th>Artículo</th><th>Tipo</th><th>"</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th><th>L5</th><th>L6</th><th>L7</th><th>L20</th><th>L21</th><th>Stock</th><th>V.30d</th></tr></thead><tbody id="tbody-prec"><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 100" QLED 4K GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+      <td style="font-weight:700;color:#0C447C">100"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$2.922.999</td><td style="">$3.215.999</td><td style="">$3.302.999</td><td style="">$3.419.999</td><td style="">$3.566.999</td><td style="">$4.269.999</td><td style="">$4.764.999</td><td style="">$2.922.999</td><td style="">$4.269.999</td>
+      <td style="font-weight:600">0</td>
+      <td style="color:#1565C0;font-weight:600">—</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 85" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">85"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$2.599.999</td><td style="">$2.859.999</td><td style="">$2.937.999</td><td style="">$3.041.999</td><td style="">$3.171.999</td><td style="">$3.795.999</td><td style="">$4.237.999</td><td style="">$2.599.999</td><td style="">$3.999.999</td>
+      <td style="font-weight:600">9</td>
+      <td style="color:#1565C0;font-weight:600">3</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 75" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">75"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$1.699.999</td><td style="">$1.869.999</td><td style="">$1.920.999</td><td style="">$1.988.999</td><td style="">$2.073.999</td><td style="">$2.481.999</td><td style="">$2.770.999</td><td style="">$1.699.999</td><td style="">$2.770.999</td>
+      <td style="font-weight:600">21</td>
+      <td style="color:#1565C0;font-weight:600">8</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 75" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">75"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$1.449.999</td><td style="">$1.594.999</td><td style="">$1.638.999</td><td style="">$1.696.999</td><td style="">$1.768.999</td><td style="">$2.116.999</td><td style="">$2.363.999</td><td style="">$1.449.999</td><td style="">$2.363.999</td>
+      <td style="font-weight:600">17</td>
+      <td style="color:#1565C0;font-weight:600">1</td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 75" QLED 4K ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+      <td style="font-weight:700;color:#0C447C">75"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$1.259.999</td><td style="">$1.385.999</td><td style="">$1.436.999</td><td style="">$1.511.999</td><td style="">$1.499.999</td><td style="">$1.839.999</td><td style="">$2.053.999</td><td style="">$1.259.999</td><td style="">$1.999.999</td>
+      <td style="font-weight:600">9</td>
+      <td style="color:#1565C0;font-weight:600">5</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 65" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">65"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$1.099.999</td><td style="">$1.209.999</td><td style="">$1.242.999</td><td style="">$1.286.999</td><td style="">$1.341.999</td><td style="">$1.605.999</td><td style="">$1.792.999</td><td style="">$1.099.999</td><td style="">$1.792.999</td>
+      <td style="font-weight:600">1</td>
+      <td style="color:#1565C0;font-weight:600">2</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 65" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">65"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$1.097.999</td><td style="">$1.207.999</td><td style="">$1.240.999</td><td style="">$1.284.999</td><td style="">$1.339.999</td><td style="">$1.603.999</td><td style="">$1.789.999</td><td style="">$1.097.999</td><td style="">$1.789.999</td>
+      <td style="font-weight:600">23</td>
+      <td style="color:#1565C0;font-weight:600">16</td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 65" QLED 4K ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">QLED</span></td>
+      <td style="font-weight:700;color:#0C447C">65"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$954.999</td><td style="">$1.050.999</td><td style="">$1.079.999</td><td style="">$1.117.999</td><td style="">$1.165.999</td><td style="">$1.394.999</td><td style="">$1.556.999</td><td style="">$954.999</td><td style="">$1.556.999</td>
+      <td style="font-weight:600">34</td>
+      <td style="color:#1565C0;font-weight:600">11</td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 60" GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">60"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$799.999</td><td style="">$879.999</td><td style="">$903.999</td><td style="">$935.999</td><td style="">$975.999</td><td style="">$1.167.999</td><td style="">$1.303.999</td><td style="">$799.999</td><td style="">$1.199.999</td>
+      <td style="font-weight:600">27</td>
+      <td style="color:#1565C0;font-weight:600">28</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 55" UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">55"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$799.999</td><td style="">$879.999</td><td style="">$903.999</td><td style="">$935.999</td><td style="">$975.999</td><td style="">$1.167.999</td><td style="">$1.303.999</td><td style="">$799.999</td><td style="">$1.303.999</td>
+      <td style="font-weight:600">109</td>
+      <td style="color:#1565C0;font-weight:600">6</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 55" QLED ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">QLED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">55"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$719.999</td><td style="">$791.999</td><td style="">$813.999</td><td style="">$842.999</td><td style="">$878.999</td><td style="">$1.051.999</td><td style="">$1.173.999</td><td style="">$719.999</td><td style="">$1.173.999</td>
+      <td style="font-weight:600">81</td>
+      <td style="color:#1565C0;font-weight:600">39</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 58" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">58"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$699.999</td><td style="">$769.999</td><td style="">$790.999</td><td style="">$818.999</td><td style="">$853.999</td><td style="">$1.021.999</td><td style="">$1.140.999</td><td style="">$699.999</td><td style="">$1.199.999</td>
+      <td style="font-weight:600">4</td>
+      <td style="color:#1565C0;font-weight:600">5</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL LED 55" 4K UHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">LED</span></td>
+      <td style="font-weight:700;color:#4A0072">55"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$689.999</td><td style="">$758.999</td><td style="">$779.999</td><td style="">$807.999</td><td style="">$841.999</td><td style="">$1.007.999</td><td style="">$1.124.999</td><td style="">$689.999</td><td style="">$1.099.999</td>
+      <td style="font-weight:600">219</td>
+      <td style="color:#1565C0;font-weight:600">31</td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 50" QLED GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">QLED</span></td>
+      <td style="font-weight:700;color:#7E3100">50"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$604.999</td><td style="">$665.999</td><td style="">$684.999</td><td style="">$709.999</td><td style="">$784.999</td><td style="">$883.999</td><td style="">$986.999</td><td style="">$604.999</td><td style="">$883.999</td>
+      <td style="font-weight:600">12</td>
+      <td style="color:#1565C0;font-weight:600">1</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 50" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">50"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$585.999</td><td style="">$644.999</td><td style="">$662.999</td><td style="">$685.999</td><td style="">$714.999</td><td style="">$855.999</td><td style="">$1.051.999</td><td style="">$585.999</td><td style="">$1.051.999</td>
+      <td style="font-weight:600">13</td>
+      <td style="color:#1565C0;font-weight:600">11</td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 50" GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">50"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$559.999</td><td style="">$615.999</td><td style="">$632.999</td><td style="">$655.999</td><td style="">$683.999</td><td style="">$817.999</td><td style="">$912.999</td><td style="">$559.999</td><td style="">$899.999</td>
+      <td style="font-weight:600">169</td>
+      <td style="color:#1565C0;font-weight:600">65</td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 50" 4K ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">50"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$529.999</td><td style="">$589.999</td><td style="">$599.999</td><td style="">$622.999</td><td style="">$649.999</td><td style="">$776.999</td><td style="">$869.999</td><td style="">$529.999</td><td style="">$776.999</td>
+      <td style="font-weight:600">0</td>
+      <td style="color:#1565C0;font-weight:600">—</td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 43" ANDROID TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">43"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$399.999</td><td style="">$439.999</td><td style="">$451.999</td><td style="">$467.999</td><td style="">$487.999</td><td style="">$583.999</td><td style="">$651.999</td><td style="">$399.999</td><td style="">$699.999</td>
+      <td style="font-weight:600">38</td>
+      <td style="color:#1565C0;font-weight:600">67</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 43" FHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">43"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$399.999</td><td style="">$439.999</td><td style="">$451.999</td><td style="">$467.999</td><td style="">$487.999</td><td style="">$583.999</td><td style="">$651.999</td><td style="">$399.999</td><td style="">$651.999</td>
+      <td style="font-weight:600">92</td>
+      <td style="color:#1565C0;font-weight:600">117</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 43" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">43"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$389.999</td><td style="">$428.999</td><td style="">$440.999</td><td style="">$456.999</td><td style="">$475.999</td><td style="">$569.999</td><td style="">$635.999</td><td style="">$389.999</td><td style="">$679.999</td>
+      <td style="font-weight:600">7</td>
+      <td style="color:#1565C0;font-weight:600">5</td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 43" FULL HD ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">43"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$379.999</td><td style="">$419.999</td><td style="">$429.999</td><td style="">$444.999</td><td style="">$462.999</td><td style="">$554.999</td><td style="">$619.999</td><td style="">$379.999</td><td style="">$554.999</td>
+      <td style="font-weight:600">194</td>
+      <td style="color:#1565C0;font-weight:600">10</td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 40" FULL HD ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">40"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$339.999</td><td style="">$373.999</td><td style="">$384.999</td><td style="">$397.999</td><td style="">$414.999</td><td style="">$496.999</td><td style="">$554.999</td><td style="">$339.999</td><td style="">$699.999</td>
+      <td style="font-weight:600">214</td>
+      <td style="color:#1565C0;font-weight:600">54</td></tr><tr>
+      <td><span class="prov-pill" style="background:#6A1B9A">TCL</span></td>
+      <td style="text-align:left;font-size:11px">TCL QLED 32" FHD GOOGLE TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3E5F5;color:#4A0072">QLED</span></td>
+      <td style="font-weight:700;color:#4A0072">32"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$284.999</td><td style="">$313.999</td><td style="">$322.999</td><td style="">$333.999</td><td style="">$347.999</td><td style="">$416.999</td><td style="">$464.999</td><td style="">$284.999</td><td style="">$499.999</td>
+      <td style="font-weight:600">170</td>
+      <td style="color:#1565C0;font-weight:600">41</td></tr><tr>
+      <td><span class="prov-pill" style="background:#E65100">BGH</span></td>
+      <td style="text-align:left;font-size:11px">BGH 32" ANDROID TV</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#FFF3E0;color:#7E3100">LED</span></td>
+      <td style="font-weight:700;color:#7E3100">32"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$256.999</td><td style="">$282.999</td><td style="">$290.999</td><td style="">$300.999</td><td style="">$313.999</td><td style="">$375.999</td><td style="">$418.999</td><td style="">$256.999</td><td style="">$418.999</td>
+      <td style="font-weight:600">3</td>
+      <td style="color:#1565C0;font-weight:600">1</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 32" ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">LED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">32"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$256.999</td><td style="">$282.999</td><td style="">$290.999</td><td style="">$300.999</td><td style="">$313.999</td><td style="">$375.999</td><td style="">$418.999</td><td style="">$256.999</td><td style="">$418.999</td>
+      <td style="font-weight:600">248</td>
+      <td style="color:#1565C0;font-weight:600">145</td></tr><tr>
+      <td><span class="prov-pill" style="background:#1565C0">FAG SISTEM</span></td>
+      <td style="text-align:left;font-size:11px">TV KANJI 32" HD ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E3F2FD;color:#0C447C">LED</span></td>
+      <td style="font-weight:700;color:#0C447C">32"</td>
+      <td style="background:#E3F2FD;font-weight:700;color:#0C447C">$239.999</td><td style="">$263.999</td><td style="">$271.999</td><td style="">$280.999</td><td style="">$292.999</td><td style="">$350.999</td><td style="">$391.999</td><td style="">$239.999</td><td style="">$399.999</td>
+      <td style="font-weight:600">223</td>
+      <td style="color:#1565C0;font-weight:600">45</td></tr><tr>
+      <td><span class="prov-pill" style="background:#2E7D32">NEW SAN</span></td>
+      <td style="text-align:left;font-size:11px">NOBLEX 70" QLED ANDROID</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#E8F5E9;color:#1B4D1E">QLED</span></td>
+      <td style="font-weight:700;color:#1B4D1E">70"</td>
+      <td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td><td class="muted-val">—</td>
+      <td style="font-weight:600">0</td>
+      <td style="color:#1565C0;font-weight:600">—</td></tr></tbody></table></div></div>
+  </div>
+</main>
+
+<div class="footer">TV Mundial 2026 · Casa Luis Chemes · Datos: Google Sheets + Tango ERP</div>
+
+<script>
+const PROV = {
+  'FAG SISTEM':{ acc:'#1565C0', bg:'#E3F2FD', fg:'#0C447C' },
+  'BGH':       { acc:'#E65100', bg:'#FFF3E0', fg:'#7E3100' },
+  'NEW SAN':   { acc:'#2E7D32', bg:'#E8F5E9', fg:'#1B4D1E' },
+  'TCL':       { acc:'#6A1B9A', bg:'#F3E5F5', fg:'#4A0072' }
+};
+const TIPO_COL = { 'LED':'#378ADD','QLED':'#EF9F27','MINI LED':'#D4537E' };
+let charts = {};
+let DATA = null;
+let activeFilter = { rec:'ALL', ven:'ALL', prec:'ALL' };
+
+// ── CARGA ─────────────────────────────────────────────────
+async function loadData() {
+  const url = document.getElementById('api-input').value.trim();
+  if (!url) { showError('Pegá la URL de Apps Script en el campo del encabezado.'); return; }
+  setLoading(true); hideError();
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    DATA = d;
+    renderAll(d);
+    document.getElementById('last-update').textContent = 'Actualizado: ' + d.updated;
+    if (d.tangoArchivo) {
+      document.getElementById('tango-badge').style.display = 'inline';
+      document.getElementById('tango-badge').textContent = 'Tango: ' + d.tangoFecha;
+    }
+    localStorage.setItem('tv_api_url', url);
+    localStorage.setItem('tv_data', JSON.stringify(d));
+  } catch(e) {
+    showError('Error al conectar: ' + e.message);
+  } finally { setLoading(false); }
+}
+
+function renderAll(d) {
+  renderKPIs(d);
+  renderChartCumpl(d); renderChartMeses(d); renderChartTipo(d);
+  renderTablaRec(d, 'ALL');
+  renderKPIsVentas(d);
+  renderChartsVentas(d);
+  renderTablaVentas(d, 'ALL');
+  renderKPIsPrecios(d);
+  renderTablaPrecios(d, 'ALL');
+}
+
+// ── KPIs RECEPCIONES ──────────────────────────────────────
+function renderKPIs(d) {
+  set('kpi-pedido', fmt(d.totalPedido));
+  set('kpi-recibido', fmt(d.totalRecibido));
+  set('kpi-pendiente', fmt(d.totalPendiente));
+  setHTML('kpi-rec-sub', badge(d.pctGlobal) + ' del total');
+  setHTML('kpi-pend-sub', '<span class="badge badge-red">' + (100-d.pctGlobal) + '% sin recibir</span>');
+  const mejor = d.proveedores.reduce((a,b) => a.pct > b.pct ? a : b);
+  set('kpi-mejor', mejor.nombre);
+  setHTML('kpi-mejor-sub', '<span class="badge badge-green">' + mejor.pct + '% cumplimiento</span>');
+}
+
+// ── KPIs VENTAS ───────────────────────────────────────────
+function renderKPIsVentas(d) {
+  const allItems = d.proveedores.flatMap(p => p.items);
+  const v30 = allItems.reduce((s,i) => s+(i.ventas30d||0),0);
+  const v3m = allItems.reduce((s,i) => s+(i.ventas3m||0),0);
+  set('kpi-v30', fmt(v30)); set('kpi-v3m', fmt(v3m));
+  const top30 = [...allItems].filter(i=>i.ventas30d>0).sort((a,b)=>b.ventas30d-a.ventas30d)[0];
+  const top3m = [...allItems].filter(i=>i.ventas3m>0).sort((a,b)=>b.ventas3m-a.ventas3m)[0];
+  if (top30) { set('kpi-top30', top30.desc.substring(0,40)); setHTML('kpi-top30-sub','<span class="badge badge-green">'+top30.ventas30d+' u.</span>'); }
+  if (top3m) { set('kpi-top3m', top3m.desc.substring(0,40)); setHTML('kpi-top3m-sub','<span class="badge badge-amber">'+top3m.ventas3m+' u.</span>'); }
+}
+
+// ── KPIs PRECIOS ──────────────────────────────────────────
+function renderKPIsPrecios(d) {
+  const conPrecio = d.proveedores.flatMap(p=>p.items).filter(i=>i.L1>0).length;
+  set('kpi-con-precio', conPrecio);
+  set('kpi-tango-fecha', d.tangoArchivo ? 'Archivo: ' + d.tangoArchivo : 'Sin datos de Tango');
+}
+
+// ── CHARTS RECEPCIONES ────────────────────────────────────
+function renderChartCumpl(d) {
+  const ctx = document.getElementById('c-cumpl');
+  if (charts.cumpl) charts.cumpl.destroy();
+  charts.cumpl = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:d.proveedores.map(p=>p.nombre), datasets:[{ data:d.proveedores.map(p=>p.pct), backgroundColor:d.proveedores.map(p=>PROV[p.nombre]?.acc||'#888'), borderRadius:5, borderSkipped:false }] },
+    options:{ responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#6B7A99'}}, y:{max:100,grid:{color:'#F0F4FA'},ticks:{font:{size:10},color:'#6B7A99',callback:v=>v+'%'}} } }
+  });
+}
+function renderChartMeses(d) {
+  const ctx = document.getElementById('c-meses');
+  if (charts.meses) charts.meses.destroy();
+  charts.meses = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:d.meses, datasets:d.proveedores.map(p=>({ label:p.nombre, data:p.meses, backgroundColor:PROV[p.nombre]?.acc||'#888', borderRadius:3 })) },
+    options:{ responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{stacked:true,grid:{display:false},ticks:{font:{size:10},color:'#6B7A99'}}, y:{stacked:true,grid:{color:'#F0F4FA'},ticks:{font:{size:10},color:'#6B7A99'}} } }
+  });
+}
+function renderChartTipo(d) {
+  const ctx = document.getElementById('c-tipo');
+  const tipos = Object.keys(d.tipoTotales);
+  const vals = tipos.map(t=>d.tipoTotales[t]);
+  const total = vals.reduce((a,b)=>a+b,0);
+  if (charts.tipo) charts.tipo.destroy();
+  charts.tipo = new Chart(ctx,{type:'doughnut',data:{labels:tipos,datasets:[{data:vals,backgroundColor:tipos.map(t=>TIPO_COL[t]||'#888'),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'62%'}});
+  document.getElementById('tipo-leg').innerHTML = tipos.map((t,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:${TIPO_COL[t]||'#888'}"></span><span style="color:#6B7A99">${t} ${Math.round(vals[i]/total*100)}%</span></span>`).join('');
+}
+
+// ── CHARTS VENTAS ─────────────────────────────────────────
+function renderChartsVentas(d) {
+  ['v30prov','v3mprov'].forEach(id => { if(charts[id]) charts[id].destroy(); });
+  charts.v30prov = new Chart(document.getElementById('c-v30prov'),{
+    type:'bar',
+    data:{ labels:d.proveedores.map(p=>p.nombre), datasets:[{data:d.proveedores.map(p=>p.ventas30d||0),backgroundColor:d.proveedores.map(p=>PROV[p.nombre]?.acc||'#888'),borderRadius:5}] },
+    options:{ responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#6B7A99'}}, y:{grid:{color:'#F0F4FA'},ticks:{font:{size:10},color:'#6B7A99'}} } }
+  });
+  charts.v3mprov = new Chart(document.getElementById('c-v3mprov'),{
+    type:'bar',
+    data:{ labels:d.proveedores.map(p=>p.nombre), datasets:[{data:d.proveedores.map(p=>p.ventas3m||0),backgroundColor:d.proveedores.map(p=>PROV[p.nombre]?.acc||'#888'),borderRadius:5}] },
+    options:{ responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false},ticks:{font:{size:10},color:'#6B7A99'}}, y:{grid:{color:'#F0F4FA'},ticks:{font:{size:10},color:'#6B7A99'}} } }
+  });
+}
+
+// ── TABLA RECEPCIONES ─────────────────────────────────────
+function renderTablaRec(d, filter) {
+  const tbody = document.getElementById('tbody-rec');
+  tbody.innerHTML = '';
+  const fm = { FAG:'FAG SISTEM', BGH:'BGH', NEW:'NEW SAN', TCL:'TCL' };
+  d.proveedores.forEach(prov => {
+    if (filter !== 'ALL' && fm[filter] !== prov.nombre) return;
+    const c = PROV[prov.nombre] || { acc:'#888', bg:'#F5F5F5', fg:'#333' };
+    prov.items.forEach((item,idx) => {
+      const barCol = item.pct>=80?'#2E7D32':item.pct>=40?'#E65100':'#B71C1C';
+      const est = item.pct>=80?'<span class="estado" style="background:#E8F5E9;color:#2E7D32">BIEN</span>':item.pct>=40?'<span class="estado" style="background:#FFF3E0;color:#E65100">EN PROGRESO</span>':'<span class="estado" style="background:#FFEBEE;color:#B71C1C">CRÍTICO</span>';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idx===0?`<span class="prov-pill" style="background:${c.acc}">${prov.nombre}</span>`:''}</td>
+        <td style="text-align:left;font-size:11px">${item.desc}</td>
+        <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:${c.bg};color:${c.fg}">${item.tipo}</span></td>
+        <td style="font-weight:700;color:${c.fg}">${item.pulgadas}"</td>
+        <td>${item.pedido}</td><td style="font-weight:600">${item.recibido}</td>
+        <td style="color:#B71C1C">${item.pendiente}</td>
+        <td><div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${item.pct}%;background:${barCol}"></div></div><span class="bar-pct" style="color:${barCol}">${item.pct}%</span></div></td>
+        ${item.meses.map(v=>`<td class="${v>0?'':'muted-val'}">${v>0?v:'—'}</td>`).join('')}
+        <td>${est}</td>`;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+// ── TABLA VENTAS ──────────────────────────────────────────
+function renderTablaVentas(d, filter) {
+  const tbody = document.getElementById('tbody-ven');
+  tbody.innerHTML = '';
+  const fm = { FAG:'FAG SISTEM', BGH:'BGH', NEW:'NEW SAN', TCL:'TCL' };
+  const allItems = [];
+  d.proveedores.forEach(prov => {
+    if (filter !== 'ALL' && fm[filter] !== prov.nombre) return;
+    prov.items.forEach(item => allItems.push({ ...item, provNombre: prov.nombre }));
+  });
+  allItems.sort((a,b) => (b.ventas30d||0) - (a.ventas30d||0));
+  allItems.forEach((item,idx) => {
+    const c = PROV[item.provNombre] || { acc:'#888', bg:'#F5F5F5', fg:'#333' };
+    const dias = item.diasStock;
+    const diasHTML = dias === null ? '<span class="muted-val">—</span>'
+      : dias >= 30 ? `<span class="dias-ok">${dias}d</span>`
+      : dias >= 10 ? `<span class="dias-warn">${dias}d</span>`
+      : `<span class="dias-crit">${dias}d</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="prov-pill" style="background:${c.acc}">${item.provNombre}</span></td>
+      <td style="text-align:left;font-size:11px">${item.desc}</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:${c.bg};color:${c.fg}">${item.tipo}</span></td>
+      <td style="font-weight:700;color:${c.fg}">${item.pulgadas}"</td>
+      <td style="font-weight:600">${fmt(item.stockActual||0)}</td>
+      <td style="font-weight:700;color:${(item.ventas30d||0)>0?'#1565C0':'#BDC8DC'}">${item.ventas30d||'—'}</td>
+      <td style="color:${(item.ventas3m||0)>0?'#333':'#BDC8DC'}">${item.ventas3m||'—'}</td>
+      <td style="color:var(--muted)">${item.ventasAnio||'—'}</td>
+      <td>${diasHTML}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── TABLA PRECIOS ─────────────────────────────────────────
+function renderPrecios() { if (DATA) renderTablaPrecios(DATA, activeFilter.prec); }
+function renderTablaPrecios(d, filter) {
+  const tbody = document.getElementById('tbody-prec');
+  tbody.innerHTML = '';
+  const fm = { FAG:'FAG SISTEM', BGH:'BGH', NEW:'NEW SAN', TCL:'TCL' };
+  const listas = ['L1','L2','L3','L4','L5','L6','L7','L20','L21'];
+  const selLista = document.getElementById('lista-select')?.value || 'L1';
+  const allItems = [];
+  d.proveedores.forEach(prov => {
+    if (filter !== 'ALL' && fm[filter] !== prov.nombre) return;
+    prov.items.forEach(item => allItems.push({ ...item, provNombre: prov.nombre }));
+  });
+  allItems.sort((a,b) => (b[selLista]||0) - (a[selLista]||0));
+  allItems.forEach(item => {
+    const c = PROV[item.provNombre] || { acc:'#888', bg:'#F5F5F5', fg:'#333' };
+    const pCell = (l) => {
+      const v = item[l] || 0;
+      if (!v) return '<td class="muted-val">—</td>';
+      const isSelected = l === selLista;
+      return `<td style="${isSelected?'background:#E3F2FD;font-weight:700;color:#0C447C':''}">${fmtPrecio(v)}</td>`;
+    };
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="prov-pill" style="background:${c.acc}">${item.provNombre}</span></td>
+      <td style="text-align:left;font-size:11px">${item.desc}</td>
+      <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:${c.bg};color:${c.fg}">${item.tipo}</span></td>
+      <td style="font-weight:700;color:${c.fg}">${item.pulgadas}"</td>
+      ${listas.map(l => pCell(l)).join('')}
+      <td style="font-weight:600">${fmt(item.stockActual||0)}</td>
+      <td style="color:#1565C0;font-weight:600">${item.ventas30d||'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── FILTROS ───────────────────────────────────────────────
+function filterTabla(f, btn, tab) {
+  activeFilter[tab] = f;
+  const container = btn.closest('.prov-tabs');
+  container.querySelectorAll('.tab-btn').forEach(b => b.className = 'tab-btn');
+  btn.className = 'tab-btn active-' + f;
+  if (DATA) {
+    if (tab === 'rec') renderTablaRec(DATA, f);
+    if (tab === 'ven') renderTablaVentas(DATA, f);
+    if (tab === 'prec') renderTablaPrecios(DATA, f);
+  }
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+const fmt = n => (n||0).toLocaleString('es-AR');
+const fmtPrecio = n => '$' + Math.round(n).toLocaleString('es-AR');
+const set = (id,v) => { const el = document.getElementById(id); if(el) el.textContent=v; };
+const setHTML = (id,v) => { const el = document.getElementById(id); if(el) el.innerHTML=v; };
+function badge(pct) {
+  return pct>=80 ? '<span class="badge badge-green">'+pct+'%</span>'
+       : pct>=40 ? '<span class="badge badge-amber">'+pct+'%</span>'
+       : '<span class="badge badge-red">'+pct+'%</span>';
+}
+function setLoading(on) {
+  document.getElementById('loading').classList.toggle('hidden',!on);
+  document.getElementById('btn-refresh').classList.toggle('loading',on);
+}
+function showError(m) { const e=document.getElementById('error-msg'); e.textContent=m; e.style.display='block'; }
+function hideError() { document.getElementById('error-msg').style.display='none'; }
+
+// ── INIT ──────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const savedUrl  = localStorage.getItem('tv_api_url');
+  const savedData = localStorage.getItem('tv_data');
+  if (savedUrl) document.getElementById('api-input').value = savedUrl;
+  if (savedData) {
+    try {
+      DATA = JSON.parse(savedData);
+      renderAll(DATA);
+      document.getElementById('last-update').textContent = 'Desde caché · ' + DATA.updated;
+      if (DATA.tangoArchivo) {
+        document.getElementById('tango-badge').style.display = 'inline';
+        document.getElementById('tango-badge').textContent = 'Tango: ' + DATA.tangoFecha;
+      }
+    } catch(e) {}
+  }
+  setLoading(false);
+  if (savedUrl) setInterval(() => loadData(), 5 * 60 * 1000);
+});
+</script>
+
+
+</body></html>
